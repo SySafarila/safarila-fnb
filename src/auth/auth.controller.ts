@@ -1,5 +1,13 @@
-import { Body, Controller, HttpStatus, Post, Req, Res } from '@nestjs/common';
-import { Request, Response } from 'express';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+} from '@nestjs/common';
+import { Request } from 'express';
+import HttpError from 'src/utils/HttpError';
 
 type LoginRequest = {
   email: string;
@@ -9,35 +17,34 @@ type LoginRequest = {
 @Controller('auth')
 export class AuthController {
   @Post('login')
-  login(@Body() loginRequest: LoginRequest, @Res() res: Response): void {
+  @HttpCode(HttpStatus.OK)
+  login(@Body() loginRequest: LoginRequest): { token: string } {
     const { email, password } = loginRequest;
 
     if (!email || !password) {
-      res
-        .status(HttpStatus.BAD_REQUEST)
-        .json({ message: 'Email or Passwor is required' });
-      return;
+      throw new HttpError(
+        'Email and password are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    res.json({
+    return {
       token: 'token',
-    });
+    };
   }
 
   @Post('logout')
-  logout(@Res() res: Response, @Req() req: Request): void {
+  @HttpCode(HttpStatus.OK)
+  logout(@Req() req: Request): { message: string } {
     const headers = req.headers;
     const token = headers.authorization;
 
     if (!token) {
-      res.status(HttpStatus.UNAUTHORIZED).json({
-        message: 'Token required',
-      });
-      return;
+      throw new HttpError('Token is required', HttpStatus.UNAUTHORIZED);
     }
 
-    res.json({
+    return {
       message: 'Logout success',
-    });
+    };
   }
 }
